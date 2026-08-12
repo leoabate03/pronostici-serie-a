@@ -1,0 +1,30 @@
+# Android / Gradle
+android/.gradle/
+android/build/
+android/local.properties
+android/app/build/
+*.iml
+.gradle
+.cxx
+
+# API keys - never commit real values (use android/gradle.properties instead)
+android/gradle.properties
+!android/gradle.properties.example
+
+# Kaggle API credentials (Colab scratch)
+kaggle.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+
+# Data / artifacts (downloaded datasets, trained models, csv) — only the ROOT /data dir
+/data/
+*.csv
+*.sqlite
+*.tflite
+!android/app/src/main/assets/seriea_model.tflite
