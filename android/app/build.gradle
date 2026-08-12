@@ -13,6 +13,11 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
+
+        // Chiavi lette da android/gradle.properties (NON versionato).
+        // Fallback: placeholder "INSERISCI..." se il file non ha i valori.
+        buildConfigField "String", "FOOTBALL_DATA_TOKEN", "\"${findProperty('FD_TOKEN') ?: 'INSERISCI_IL_TUO_TOKEN'}\""
+        buildConfigField "String", "ODDS_API_KEY", "\"${findProperty('ODDS_KEY') ?: 'INSERISCI_LA_TUA_CHIAVE'}\""
     }
 
     buildTypes {
@@ -31,6 +36,7 @@ android {
     }
     buildFeatures {
         compose true
+        buildConfig true
     }
     composeOptions {
         kotlinCompilerExtensionVersion '1.5.14'

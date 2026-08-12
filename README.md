@@ -50,8 +50,10 @@ android/              # App Kotlin + Jetpack Compose
 ## Passo 3 — App Android
 
 1. Apri `android/` in **Android Studio** (versione gratuita).
-2. In `app/src/main/java/com/example/soccerapp/di/ApiKeys.kt` inserisci il token
-   football-data e la chiave The Odds API (o via `gradle.properties`).
+2. Configura le chiavi in `android/gradle.properties` (copiane il file da
+   `gradle.properties.example`): `FD_TOKEN` e `ODDS_KEY`. Il valore a build-time
+   viene iniettato in `BuildConfig` e letto da `ApiKeys.kt` — nessun segreto
+   viene messo nel codice o in git.
 3. Installa su emulatore o dispositivo (Android 8.0+/minSdk 26) e avvia.
 4. App: scheda fixtures (partite) → tocca una partita → dettaglio con
    consigli; sezione "Value Bets" per le migliori quote con EV positivo.
