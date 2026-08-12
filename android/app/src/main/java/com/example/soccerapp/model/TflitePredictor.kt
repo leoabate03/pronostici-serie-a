@@ -66,13 +66,17 @@ class TflitePredictor(context: Context) {
 
         val input = arrayOf(features)
 
-        // Trova gli indici degli output guardando la shape, non l'ordine.
-        val details = it.getOutputDetails()
-        val idx1x2 = details.indexOfFirst { d ->
-            d.shape.isNotEmpty() && d.shape.lastOrNull() == 3
-        }
-        val idxOver = details.indexOfFirst { d ->
-            d.shape.isNotEmpty() && d.shape.lastOrNull() == 1
+        // Trova gli indici degli output guardando il numero di elementi,
+        // non l'ordine (TFLite inverte spesso l'ordine rispetto a keras).
+        var idx1x2 = -1
+        var idxOver = -1
+        for (i in 0..1) {
+            try {
+                when (it.getOutputTensor(i).numElements()) {
+                    3 -> idx1x2 = i
+                    1 -> idxOver = i
+                }
+            } catch (_: Exception) {}
         }
         if (idx1x2 < 0 || idxOver < 0) {
             // output inattesi (modello non familiare): tratta come non caricato

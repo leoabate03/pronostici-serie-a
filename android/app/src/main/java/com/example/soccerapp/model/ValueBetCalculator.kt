@@ -79,6 +79,7 @@ object ValueBetCalculator {
                 val under = best[Outcome.UNDER_25] ?: return 1.0 / over
                 (1.0 / over) / (1.0 / over + 1.0 / under)
             }
+            Outcome.UNDER_25 -> 0.0
         }
     }
 
