@@ -1,4 +1,5 @@
 # Copia questo file in "android/gradle.properties" e inserisci le tue chiavi.
 # gradle.properties NON viene committato (vedi .gitignore).
+android.useAndroidX=true
 FD_TOKEN=INSERISCI_IL_TUO_TOKEN
 ODDS_KEY=INSERISCI_LA_TUA_CHIAVE
