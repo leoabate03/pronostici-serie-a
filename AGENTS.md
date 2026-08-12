@@ -13,7 +13,7 @@ android/     Gradle Android project, single module `:app`
 android/app/src/main/java/com/example/soccerapp/
   data/network/   Retrofit clients (football-data.org, The Odds API), Moshi models
   data/local/     FixtureCache (in-memory, protects API rate limits)
-  model/          Models.kt, ValueBetCalculator.kt, TflitePredictor.kt
+  model/          Models.kt, ValueBetCalculator.kt, TflitePredictor.kt, TeamStatsEngine.kt
   di/ApiKeys.kt   API keys live here — never commit real values
   ui/             Compose screens + MainViewModel
 android/app/src/main/assets/seriea_model.tflite   trained model (placeholder until trained)
@@ -25,11 +25,12 @@ android/app/src/main/assets/seriea_model.tflite   trained model (placeholder unt
   Must be opened in Android Studio to compile. Python 3.9 is available locally
   to syntax-check notebook scripts: `python3 -m py_compile`.
 - **The Odds API free tier = 500 requests/month.** One call costs
-  `markets × regions`. The call in `OddsApi.kt` uses `h2h,totals` × `eu` = 2
-  credits per refresh. Never call season/historical endpoints from the app.
+  `markets × regions`. The call in `OddsApi.kt` uses `h2h` × `eu` = 1 credit per
+  refresh (totals was dropped while O/U is disabled). Never call
+  season/historical endpoints from the app.
 - **`totals` (over/under) odds are mainly for US sports** in The Odds API; for
-  soccer they may be absent — `ValueBetCalculator` treats a missing O/U as
-  "no suggestion", do not assume O/U odds exist.
+  soccer they may be absent — and the app does not request them while the
+  O/U model signal is ~coin-flip. Do not assume O/U odds exist.
 - **football-data.org rate limits** (~10 req/min, free tier top competitions
   only). `FixtureCache` exists to avoid re-fetching; keep that pattern.
 - **fixture keys don't match between APIs**: football-data uses numeric ids,
@@ -38,10 +39,21 @@ android/app/src/main/assets/seriea_model.tflite   trained model (placeholder unt
   sources.
 - **The `.tflite` placeholder is a text file**, not a real model. The app
   deliberately treats a failed `Interpreter` load as "no ML" and falls back to
-  bookmaker implied probabilities. Do not add a crash/log `rethrow` there.
-- The `featureCount` in `TflitePredictor` (11, or 8 without odds) must match
-  `FEATURE_COLS` in `notebooks/02_train_model.py`; the ViewModel writes the
-  odds-implied features at fixed indices 8/9/10 (careful with the `n==8` path).
+  Serie A base rates (~46/27/27). Do not add a crash/log `rethrow` there.
+- **The trained model is 8-feature, no odds** (currently live). `featureCount`
+  in `TflitePredictor` (8) must match `FEATURE_COLS` in
+  `notebooks/02_train_model.py`. Physical team-stat features come from
+  `TeamStatsEngine`, which replicates the notebook's EWMA team ratings at the
+  SAME scale (gol/partita ~1.3, forma in punti 0..3) — keep both in sync.
+- **TFLite output order differs from keras output order.** `predict()` maps
+  output tensors BY SHAPE (`[1,3]` = 1X2, `[1,1]` = over/under), never by
+  positional index — the notebook prints `over_under_25` before `outcome_1x2`.
+- **Over/Under is intentionally DISABLED** in `ValueBetCalculator.findValueBets`
+  (current model has ~coin-flip O/U signal). Do not re-enable it for the
+  8-feature model; only revisit after a retrain with odds columns.
+- **football-data.org `/matches` returns finished + scheduled together.** The
+  ViewModel splits them: finished feed the `TeamStatsEngine`, scheduled are
+  shown in the UI. If this split is changed, keep `FixtureCache` caching BOTH.
 
 ## Commands
 

@@ -57,14 +57,17 @@ android/              # App Kotlin + Jetpack Compose
    consigli; sezione "Value Bets" per le migliori quote con EV positivo.
 
 > Il `.tflite` incluso è un segnaposto: finché non metti il modello addestrato,
-> l'app usa le *quote implicite dei bookmaker* come base (senza ML) — comunque
-> funzionante per trovare gli edge.
+> l'app usa le *frequenze storiche Serie A* (~46/27/27) come base — comunque
+> funzionante per trovare gli edge. Il modello attuale è a **8 feature senza
+> quote**; Over/Under 2.5 è disattivato finché un retrain con le quote non
+> restituisce probabilità over affidabili.
 
 ## Calcolo del "migliore bookmaker"
 
-Per ogni partita e per ogni esito (Casa / Pareggio / Trasferta / Over 2.5):
+Per ogni partita e per ogni esito 1X2 (Casa / Pareggio / Trasferta):
 1. Da tutte le quote dei bookmaker presi, si toglie il margine e si normalizza.
-2. Il modello dà la probabilità. Se `P_modello > P_implicita + 3%` → c'è "edge".
+2. Il modello dà la probabilità (predizioni statistiche → `TeamStatsEngine`,
+   partite finite). Se `P_modello > P_implicita + 3%` → c'è "edge".
 3. Quota più alta usata per l'esito = **migliore bookmaker**.
 4. `EV = P_modello × (quota − 1) − (1 − P_modello)`. EV > 0 → consiglio.
 

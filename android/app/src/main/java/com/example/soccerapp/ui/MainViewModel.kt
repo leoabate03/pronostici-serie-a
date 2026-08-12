@@ -15,6 +15,7 @@ import com.example.soccerapp.model.Fixture
 import com.example.soccerapp.model.H2hOdds
 import com.example.soccerapp.model.Prediction
 import com.example.soccerapp.model.TflitePredictor
+import com.example.soccerapp.model.TeamStatsEngine
 import com.example.soccerapp.model.TotalOdds
 import com.example.soccerapp.model.ValueBetCalculator
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,11 +46,13 @@ class MainViewModel : ViewModel() {
             _state.value = _state.value.copy(error = null)
             try {
                 val cached = FixtureCache.get()
-                val fixtures = if (cached.isNotEmpty()) cached else {
+                val all = if (cached.isNotEmpty()) cached else {
                     fetchFixtures().also { FixtureCache.put(it) }
                 }
+                val engine = buildEngineFrom(all.filter { it.isFinished })
+                val fixtures = all.filter { !it.isFinished }
                 val events = fetchOdds(fixtures)
-                val suggestions = buildSuggestions(fixtures, events)
+                val suggestions = buildSuggestions(fixtures, events, engine)
                 _state.value = _state.value.copy(
                     fixtures = fixtures,
                     suggestions = suggestions,
@@ -59,6 +62,17 @@ class MainViewModel : ViewModel() {
                 _state.value = _state.value.copy(error = e.message)
             }
         }
+    }
+
+    /** Addestra l'engine con i match gia' giocati, in ordine temporale. */
+    private fun buildEngineFrom(finished: List<Fixture>): TeamStatsEngine {
+        val engine = TeamStatsEngine()
+        finished.sortedBy { it.utcDate }.forEach { f ->
+            val hg = f.homeGoals ?: 0
+            val ag = f.awayGoals ?: 0
+            engine.consumeFinishedMatch(f.homeTeam, f.awayTeam, hg, ag)
+        }
+        return engine
     }
 
     private suspend fun fetchFixtures(): List<Fixture> {
@@ -73,7 +87,7 @@ class MainViewModel : ViewModel() {
                 awayGoals = m.score?.fullTime?.away,
                 utcDate = m.utcDate,
             )
-        }.filter { !it.isFinished }
+        }
     }
 
     private suspend fun fetchOdds(fixtures: List<Fixture>): List<OddsEvent> {
@@ -85,6 +99,7 @@ class MainViewModel : ViewModel() {
     private fun buildSuggestions(
         fixtures: List<Fixture>,
         events: List<OddsEvent>,
+        engine: TeamStatsEngine,
     ): List<BetSuggestion> {
         // Teams' names are the only id common to both APIs. Normalise and map.
         fun norm(name: String): String =
@@ -105,7 +120,7 @@ class MainViewModel : ViewModel() {
             val (best, titles) = ValueBetCalculator.bestOddsPerOutcome(bookmakers)
             if (best.isEmpty()) return@forEach
 
-            val prediction = predictFor(best)
+            val prediction = predictFor(fixture.homeTeam, fixture.awayTeam, engine)
             suggestions += ValueBetCalculator.findValueBets(
                 fixtureId = event.id,
                 bestPerOutcome = best,
@@ -143,52 +158,21 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Costruisce le feature (8) dalle statistiche accumulate nelle partite
+     * finite e chiede al modello la probabilita' 1X2 / over.
+     */
     private fun predictFor(
-        best: Map<ValueBetCalculator.Outcome, Double>,
+        home: String,
+        away: String,
+        engine: TeamStatsEngine,
     ): Prediction {
-        // NOTA: qui andrei a costruire le feature (forma, attacco, difesa) da
-        // dati locali. Per il primo MVP usiamo le quote impliche come base,
-        // che e' gia' il predittore piu' forte. Poi il modello le raffinera'.
-        // Probabilita' implicite medie dei bookmaker (base, margine normalizzato)
-        val h = 1.0 / (best[ValueBetCalculator.Outcome.HOME] ?: 1.0)
-        val d = 1.0 / (best[ValueBetCalculator.Outcome.DRAW] ?: 1.0)
-        val a = 1.0 / (best[ValueBetCalculator.Outcome.AWAY] ?: 1.0)
-        val sum = h + d + a
-        if (sum <= 0.0) {
-            return Prediction(0.34, 0.32, 0.34, 0.5)
-        }
-        val implHome = h / sum
-        val implDraw = d / sum
-        val implAway = a / sum
-
         val model = predictor
-        // Fallback SENZA modello addestrato (fase baseline): usa le frequenze
-        // storiche medie della Serie A (~46% casa, 27% pareggio, 27% trasferta).
-        // Confrontate con le quote implicite del bookmaker producono gli edge.
+        // Fallback SENZA modello addestrato (baseline): frequenze storiche
+        // della Serie A (~46% casa, 27% pareggio, 27% trasferta).
         if (model == null || !model.isModelLoaded) {
             return Prediction(0.46, 0.27, 0.27, 0.50)
         }
-
-        // FEATURE_COLS dal notebook (indici fissi):
-        // [0]=is_home, [1]=gameweek_norm, [2]=home_att, [3]=home_def,
-        // [4]=away_att, [5]=away_def, [6]=home_form5, [7]=away_form5,
-        // [8]=impl_home, [9]=impl_draw, [10]=impl_away
-        val n = model.featureCount
-
-        if (n == 8) {
-            // Modello addestrato SENZA quote (solo 8 feature di statistiche)
-            return model.predict(floatArrayOf(1.0f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f))
-        }
-
-        val features = FloatArray(n) { 0.5f }
-        features[0] = 1.0f   // is_home
-        features[1] = 0.5f   // gameweek normalizzata (stima)
-        if (n >= 11) {
-            features[8] = implHome.toFloat()
-            features[9] = implDraw.toFloat()
-            features[10] = implAway.toFloat()
-        }
-
-        return model.predict(features)
+        return model.predict(engine.featuresFor(home, away))
     }
 }

@@ -1,4 +1,4 @@
 # Modello addestrato mancante: verra' sostituito dal .tflite rilasciato dal
-# notebook 02_train_model.py. Finche' questo file e' un segnaposto l'app usa
-# il fallback sulle quote implicite dei bookmaker (nessun ML).
+# notebook 02_train_model.py (8 feature, senza quote). Finche' questo file e'
+# un segnaposto l'app usa il fallback sulle frequenze storiche Serie A (~46/27/27).
 PLACEHOLDER_MODEL_DO_NOT_USE

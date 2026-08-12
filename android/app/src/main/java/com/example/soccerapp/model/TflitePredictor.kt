@@ -10,11 +10,12 @@ import java.nio.channels.FileChannel
  * (notebooks/02_train_model.py). Il .tflite deve stare in
  * app/src/main/assets/seriea_model.tflite.
  *
- * L'ordine delle feature e' quello della colonna FEATURE_COLS del notebook:
+ * L'ordine delle feature e' quello della colonna FEATURE_COLS (8, senza quote):
  *   [is_home, gameweek_norm, home_att_avg, home_def_avg, away_att_avg,
- *    away_def_avg, home_form5, away_form5, impl_home, impl_draw, impl_away]
+ *    away_def_avg, home_form5, away_form5]
  *
- * Se nel notebook ometti le quote (feature impl_*), aggiorna FEATURE_COUNT.
+ * Gli output non sono ordinati come passati a keras: i tensori TFLite
+ * vanno mappati per SHAPE ([1,3] = 1X2, [1,1] = over/under), non per indice.
  */
 class TflitePredictor(context: Context) {
 
@@ -22,12 +23,12 @@ class TflitePredictor(context: Context) {
 
     /**
      * true se il .tflite e' stato caricato con successo. Se false l'app usa
-     * il fallback sulle probabilita' implicite dei bookmaker.
+     * il fallback sulle frequenze storiche della Serie A.
      */
     val isModelLoaded: Boolean get() = interpreter != null
 
-    // Deve combaciare con FEATURE_COLS nel notebook di addestramento.
-    val featureCount = 11
+    // Deve combaciare con FEATURE_COLS nel notebook di addestramento (8, no quotes).
+    val featureCount = 8
 
     init {
         try {
@@ -53,21 +54,37 @@ class TflitePredictor(context: Context) {
 
     /**
      * Predice probabilita' per una partita.
-     * @param features vettore lungo `featureCount` (0.0..1.0 normalizzati)
+     * @param features vettore lungo 8 (stessa scala del training: is_home=1,
+     * gameweek_norm in [0,1], gol/partita ~1.3 come media, forma in punti 0..3)
      */
     fun predict(features: FloatArray): Prediction {
         val it = interpreter
         if (it == null) {
-            // Fallback deterministico quando il modello manca (dev): ritorna
-            // valori neutri, la UI mostrera' comunque le quote e i consigli.
+            // Fallback deterministico quando il modello manca (dev).
             return Prediction(0.34, 0.30, 0.36, 0.50)
         }
 
         val input = arrayOf(features)
-        // Output "outcome_1x2" (3 valori) + "over_under_25" (1 valore)
+
+        // Trova gli indici degli output guardando la shape, non l'ordine.
+        val details = it.getOutputDetails()
+        val idx1x2 = details.indexOfFirst { d ->
+            d.shape.isNotEmpty() && d.shape.lastOrNull() == 3
+        }
+        val idxOver = details.indexOfFirst { d ->
+            d.shape.isNotEmpty() && d.shape.lastOrNull() == 1
+        }
+        if (idx1x2 < 0 || idxOver < 0) {
+            // output inattesi (modello non familiare): tratta come non caricato
+            return Prediction(0.34, 0.30, 0.36, 0.50)
+        }
+
         val out1x2 = Array(1) { FloatArray(3) }
         val outOver = Array(1) { FloatArray(1) }
-        it.run(input, mapOf(0 to out1x2, 1 to outOver))
+        it.runForMultipleInputsOutputs(
+            input,
+            mapOf(idx1x2 to out1x2, idxOver to outOver),
+        )
 
         val p = out1x2[0]
         return Prediction(

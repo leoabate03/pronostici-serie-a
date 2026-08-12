@@ -60,25 +60,10 @@ object ValueBetCalculator {
             }
         }
 
-        // Over/Under 2.5 (modello: probabilita' over)
-        val overOdds = bestPerOutcome[Outcome.OVER_25]
-        val impliedOver = impliedProbability(Outcome.OVER_25, bestPerOutcome)
-        if (overOdds != null && overOdds > 0) {
-            val evOver = prediction.over25Prob * (overOdds - 1.0) -
-                (1.0 - prediction.over25Prob)
-            if (evOver > 0 && prediction.over25Prob - impliedOver > EDGE_THRESHOLD) {
-                suggestions.add(
-                    BetSuggestion(
-                        fixtureId = fixtureId,
-                        label = Outcome.OVER_25.label,
-                        odds = overOdds,
-                        bestBookmaker = bookmakerTitles[Outcome.OVER_25] ?: "—",
-                        expectedValue = evOver,
-                        edge = prediction.over25Prob - impliedOver,
-                    )
-                )
-            }
-        }
+        // Over/Under 2.5 DISATTIVATO: il modello attuale (8 feature, senza
+        // quote) ha segnale ~moneta su questo mercato. Lo riattiveremo quando
+        // il retrain con le quote restituira' una probabilita' over affidabile.
+        // if (prediction.over25Prob ...) -> nessun suggerimento over/under.
 
         return suggestions.sortedByDescending { it.expectedValue }
     }

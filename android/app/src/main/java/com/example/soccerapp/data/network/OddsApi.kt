@@ -45,6 +45,6 @@ interface OddsApi {
     suspend fun getOdds(
         @Query("apiKey") apiKey: String,
         @Query("regions") regions: String = "eu",
-        @Query("markets") markets: String = "h2h,totals",
+        @Query("markets") markets: String = "h2h",
     ): List<OddsEvent>
 }
