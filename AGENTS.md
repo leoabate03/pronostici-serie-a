@@ -47,7 +47,8 @@ android/app/src/main/assets/seriea_model.tflite   trained model (placeholder unt
 
 - Notebooks: open in Google Colab (free GPU) — no local commands.
 - Syntax-check a notebook's Python locally:
-  `grep -v '^\s*!' notebooks/XX_*.py | python3 -m py_compile -` (strip Colab `!` lines)
+  `grep -v '^\s*!' notebooks/XX_*.py > /tmp/x.py && python3 -m py_compile /tmp/x.py && rm /tmp/x.py`
+  (strip Colab `!` lines; `py_compile` needs a real file, not stdin)
 - Android: build/run only via Android Studio; no validated CLI equivalent here.
 
 ## Gotchas for agents

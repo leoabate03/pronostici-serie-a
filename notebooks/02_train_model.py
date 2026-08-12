@@ -31,19 +31,79 @@ tf.random.set_seed(42)
 np.random.seed(42)
 
 # ---------------------------------------------------------------------------
-# 2. CARICAMENTO E FEATURE ENGINEERING
+# 2. CARICAMENTO E ADATTAMENTO DATI
 # ---------------------------------------------------------------------------
-df = pd.read_csv("/content/matches_raw.csv")
-print("Righe totali:", len(df))
-print(df.head().to_string())
+# Supporta DUE formati di CSV:
+#  A) "Per partita": colonne home, away, home_goals, away_goals (e date/season).
+#  B) "Fbref/Kaggle: per squadra": una riga per (partita, squadra) con colonne
+#     team, opponent, venue (Home/Away), gf, ga, result. -> viene riadattato
+#     automaticamente in formato A.
+raw = pd.read_csv("/content/matches_raw.csv")
+print("Righe del CSV:", len(raw))
+print("Colonne:", list(raw.columns))
+
+if {"home_goals", "away_goals"}.issubset(raw.columns):
+    # ----- Formato A: gia' una riga per partita -----
+    df = raw.copy()
+else:
+    # ----- Formato B (fbref/Kaggle): righe per squadra -> pivot per partita -----
+    required = {"team", "opponent", "venue", "gf", "ga", "date"}
+    missing = required - set(raw.columns)
+    if missing:
+        raise ValueError(
+            f"Formato CSV non riconosciuto. Colonne mancanti: {missing}. "
+            f"Aggiungi una colonna home_goals/away_goals oppure team/opponent/venue/gf/ga."
+        )
+
+    raw = raw.copy()
+    raw["date"] = pd.to_datetime(raw["date"], errors="coerce")
+    raw["venue_norm"] = raw["venue"].astype(str).str.strip().str.lower()
+    raw["pair"] = raw[["team", "opponent"]].apply(
+        lambda r: "|".join(sorted([
+            str(r["team"]).strip().lower(),
+            str(r["opponent"]).strip().lower(),
+        ])),
+        axis=1,
+    )
+    # Colonna "comp"/"round" facoltative ma utili per distinguere i match
+    # disputati nello stesso giorno: gruppo per date + pair (e round se c'e').
+    group_keys = ["date", "pair"] + [c for c in ["round", "comp"] if c in raw.columns]
+    raw = raw.sort_values("date")
+
+    frames = []
+    for keys, g in raw.groupby(group_keys, dropna=False):
+        date = keys[0]
+        if date is None or pd.isna(date):
+            continue
+        home = g[g["venue_norm"] == "home"]
+        away = g[g["venue_norm"] == "away"]
+        if len(home) != 1 or len(away) != 1:
+            continue  # match incompleto: salta
+        h = home.iloc[0]
+        a = away.iloc[0]
+        frames.append({
+            "season": h.get("season", pd.NA),
+            "date": date,
+            "home": h["team"],
+            "away": a["team"],
+            "home_goals": pd.to_numeric(h["gf"], errors="coerce"),
+            "away_goals": pd.to_numeric(a["gf"], errors="coerce"),
+        })
+    df = pd.DataFrame(frames)
+    print("ADS: riadattate", len(frames), "partite a partire da", len(raw), "righe squadra.")
 
 # ----- 2a. Pulizia -----
+if "date" not in df.columns or df["date"].isna().all():
+    # dataset senza data usabile: ordina comunque per season stabilita
+    df["date"] = pd.to_datetime(df.get("season", 2024), format="%Y")
 df = df.dropna(subset=["home_goals", "away_goals"]).copy()
 df["home_win"] = (df["home_goals"] > df["away_goals"]).astype(int)
 df["draw"] = (df["home_goals"] == df["away_goals"]).astype(int)
 df["away_win"] = (df["home_goals"] < df["away_goals"]).astype(int)
 df["over25"] = (df["home_goals"] + df["away_goals"] >= 3).astype(int)
 df["date"] = pd.to_datetime(df["date"])
+
+print("Partite totali utilizzabili:", len(df))
 
 # ----- 2b. Rating squadre (forza attacco/difesa, forma) -----
 # Uniforma i nomi delle squadre tra le stagioni
