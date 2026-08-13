@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Pronostici Serie A</string>
+    <string name="app_name">GoalValue</string>
     <string name="disclaimer">I pronostici sono statistici e non garantiscono vincite. Scommetti in modo responsabile.</string>
 </resources>
