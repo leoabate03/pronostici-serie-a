@@ -43,6 +43,15 @@ android/app/src/main/assets/seriea_model.tflite   trained model (8-feature, real
   case the UI shows "Modello: fallback (baseline Serie A)". Do not add a
   crash/log `rethrow` there. Use the UI indicator (modelActive) to tell the two
   states apart instead of guessing.
+- **TFLite runtime = LiteRT `com.google.ai.edge.litert:litert:2.1.6`** (Google
+  Maven). It keeps the `org.tensorflow.lite.Interpreter` API (no import changes)
+  but is newer than `tensorflow-lite 2.14/2.16` and supports `FULLY_CONNECTED`
+  up to v13 — required because the model is exported with `FULLY_CONNECTED v12`.
+  Do NOT downgrade back to `org.tensorflow:tensorflow-lite:2.14.0`; it cannot
+  load this model. `tensorflow-lite-support` is unused in code — do not add it.
+- **Notebook 02 pins `tensorflow==2.16.1`** (Keras 2). Colab's default Keras 3
+  breaks `TFLiteConverter.from_keras_model` (`TypeError: 'NoneType' object is
+  not callable`). Keep the pinned version so the `.tflite` exports cleanly.
 - **The trained model is 8-feature, no odds** (currently live). `featureCount`
   in `TflitePredictor` (8) must match `FEATURE_COLS` in
   `notebooks/02_train_model.py`. Physical team-stat features come from

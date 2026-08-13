@@ -18,7 +18,10 @@ away_goals e, se disponibili, le quote del bookmaker).
 # ---------------------------------------------------------------------------
 # 1. IMPORTAZIONI E INSTALLAZIONE
 # ---------------------------------------------------------------------------
-!pip install -q tensorflow pandas numpy scikit-learn
+# Keras 2 (TF 2.16.x) perche' TFLiteConverter.from_keras_model e' rotto su
+# Keras 3 (TypeError: 'NoneType' object is not callable). Pinnare la versione
+# garantisce che l'export .tflite funzioni e che l'app (LiteRT 2.1.6) lo carichi.
+!pip install -q tensorflow==2.16.1 pandas numpy scikit-learn
 
 import numpy as np
 import pandas as pd
@@ -238,10 +241,6 @@ print("Accuracy Over/Under:", round(((p_val_over > 0.5).astype(int).ravel() == y
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 # Ottimizzazioni per ridurre dimensione apk
 converter.optimizations = [tf.lite.Optimize.DEFAULT]
-# Impedisce l'uso di op "nuove" (es. FULLY_CONNECTED v12) non supportate
-# dal runtime TFLite 2.14 su device: solo TFLITE_BUILTINS + converter legacy.
-converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS]
-converter.experimental_new_converter = False
 tflite_model = converter.convert()
 
 out_path = "/content/seriea_model.tflite"

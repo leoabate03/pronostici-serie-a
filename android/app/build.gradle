@@ -71,7 +71,8 @@ dependencies {
     implementation 'com.squareup.moshi:moshi-kotlin:1.15.1'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
 
-    // TensorFlow Lite (modello in device, nessun server)
-    implementation 'org.tensorflow:tensorflow-lite:2.14.0'
-    implementation 'org.tensorflow:tensorflow-lite-support:0.4.4'
+    // TensorFlow Lite / LiteRT (modello in device, nessun server).
+    // 2.14/2.16 non supportano FULLY_CONNECTED v12; LiteRT (2.1.6) mantiene
+    // l'API org.tensorflow.lite.Interpreter e supporta le op v12.
+    implementation 'com.google.ai.edge.litert:litert:2.1.6'
 }
