@@ -1,11 +1,17 @@
 package com.example.soccerapp.data.network
 
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 object NetworkModule {
+
+    private val moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
 
     private val client = OkHttpClient.Builder()
         .addInterceptor(HttpLoggingInterceptor().apply {
@@ -17,7 +23,7 @@ object NetworkModule {
         get() = Retrofit.Builder()
             .baseUrl("https://api.football-data.org/")
             .client(client)
-            .addConverterFactory(MoshiConverterFactory.create())
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(FootballDataApi::class.java)
 
@@ -25,7 +31,7 @@ object NetworkModule {
         get() = Retrofit.Builder()
             .baseUrl("https://api.the-odds-api.com/")
             .client(client)
-            .addConverterFactory(MoshiConverterFactory.create())
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(OddsApi::class.java)
 }

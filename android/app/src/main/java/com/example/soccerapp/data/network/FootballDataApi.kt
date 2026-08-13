@@ -5,12 +5,12 @@ import com.squareup.moshi.JsonClass
 import retrofit2.http.GET
 import retrofit2.http.Header
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class FdMatchResponse(
     @Json(name = "matches") val matches: List<FdMatch>,
 )
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class FdMatch(
     @Json(name = "id") val id: Long,
     @Json(name = "utcDate") val utcDate: String,
@@ -19,17 +19,17 @@ data class FdMatch(
     @Json(name = "score") val score: FdScore?,
 )
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class FdTeam(
     @Json(name = "name") val name: String,
 )
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class FdScore(
     @Json(name = "fullTime") val fullTime: FdFullTime?,
 )
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class FdFullTime(
     @Json(name = "home") val home: Int?,
     @Json(name = "away") val away: Int?,

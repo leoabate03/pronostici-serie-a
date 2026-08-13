@@ -5,7 +5,7 @@ import com.squareup.moshi.JsonClass
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class OddsEvent(
     @Json(name = "id") val id: String,
     @Json(name = "home_team") val homeTeam: String,
@@ -14,20 +14,20 @@ data class OddsEvent(
     @Json(name = "bookmakers") val bookmakers: List<OddsBookmaker>?,
 )
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class OddsBookmaker(
     @Json(name = "key") val key: String,
     @Json(name = "title") val title: String,
     @Json(name = "markets") val markets: List<OddsMarket>?,
 )
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class OddsMarket(
     @Json(name = "key") val key: String,     // "h2h" oppure "totals"
     @Json(name = "outcomes") val outcomes: List<OddsOutcome>,
 )
 
-@JsonClass(generateAdapter = true)
+@JsonClass(generateAdapter = false)
 data class OddsOutcome(
     @Json(name = "name") val name: String,
     @Json(name = "price") val price: Double,
