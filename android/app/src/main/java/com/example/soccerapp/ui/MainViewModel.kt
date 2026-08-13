@@ -114,7 +114,7 @@ class MainViewModel : ViewModel() {
         val byTeams = fixtures.associateBy { (norm(it.homeTeam) + "|" + norm(it.awayTeam)) }
 
         val suggestions = mutableListOf<BetSuggestion>()
-        val predPredictor = predictor ?: return suggestions
+        if (predictor == null) return suggestions
 
         events.forEach { event ->
             val home = event.homeTeam
