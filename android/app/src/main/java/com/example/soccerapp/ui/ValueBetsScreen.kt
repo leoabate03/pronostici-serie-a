@@ -10,6 +10,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.soccerapp.R
@@ -20,7 +22,8 @@ import androidx.compose.ui.res.stringResource
 /** Scorrevole della lista dei consigli con il maggior valore atteso. */
 @Composable
 fun ValueBetsScreen(viewModel: MainViewModel) {
-    val suggestions = viewModel.state.value.suggestions
+    val state by viewModel.state.collectAsState()
+    val suggestions = state.suggestions
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = "Consigli per il valore (value bets)",

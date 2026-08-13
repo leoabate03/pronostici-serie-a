@@ -59,7 +59,7 @@ class MainViewModel : ViewModel() {
                     oddsLoading = false,
                 )
             } catch (e: Exception) {
-                _state.value = _state.value.copy(error = e.message)
+                _state.value = _state.value.copy(error = e.message ?: "Errore: ${e.javaClass.simpleName}")
             }
         }
     }

@@ -15,6 +15,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -25,6 +27,8 @@ fun FixturesScreen(
     viewModel: MainViewModel,
     onFixtureClick: (String) -> Unit,
 ) {
+    val state by viewModel.state.collectAsState()
+
     LaunchedEffect(Unit) { viewModel.refresh() }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -34,15 +38,21 @@ fun FixturesScreen(
         ) {
             Text("Aggiorna dati")
         }
-        viewModel.state.value.error?.let { err ->
+        state.error?.let { err ->
             Text(
                 text = "Errore: $err",
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
+        if (state.fixtures.isEmpty() && state.error == null) {
+            Text(
+                text = "Nessuna partita in programma. Potrebbe essere fuori stagione (Serie A: ago-mag). Riprova pi\u00f9 tardi.",
+                modifier = Modifier.padding(16.dp),
+            )
+        }
         LazyColumn {
-            items(viewModel.state.value.fixtures, key = { it.id }) { fixture ->
+            items(state.fixtures, key = { it.id }) { fixture ->
                 FixtureCard(fixture) { onFixtureClick(fixture.id) }
             }
         }

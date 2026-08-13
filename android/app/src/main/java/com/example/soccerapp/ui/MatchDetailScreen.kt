@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.soccerapp.model.Fixture
@@ -16,10 +18,9 @@ fun MatchDetailScreen(
     viewModel: MainViewModel,
     fixtureId: String?,
 ) {
-    val fixture: Fixture? = viewModel.state.value.fixtures.firstOrNull { it.id == fixtureId }
-    val suggestion: BetSuggestion? = viewModel.state.value.suggestions.firstOrNull {
-        it.fixtureId == fixtureId
-    }
+    val state by viewModel.state.collectAsState()
+    val fixture = state.fixtures.firstOrNull { it.id == fixtureId }
+    val suggestion = state.suggestions.firstOrNull { it.fixtureId == fixtureId }
 
     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         if (fixture == null) {
