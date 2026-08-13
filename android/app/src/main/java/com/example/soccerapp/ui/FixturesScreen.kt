@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.soccerapp.model.Fixture
+import com.example.soccerapp.model.Prediction
 
 private enum class FixtureFilter(val label: String) {
     ALL("Tutte"),
@@ -112,14 +113,22 @@ fun FixturesScreen(
 
         LazyColumn {
             items(filtered, key = { it.id }) { fixture ->
-                FixtureCard(fixture) { onFixtureClick(fixture.id) }
+                FixtureCard(
+                    fixture = fixture,
+                    prediction = state.predictions[fixture.id],
+                    onClick = { onFixtureClick(fixture.id) },
+                )
             }
         }
     }
 }
 
 @Composable
-private fun FixtureCard(fixture: Fixture, onClick: () -> Unit) {
+private fun FixtureCard(
+    fixture: Fixture,
+    prediction: Prediction?,
+    onClick: () -> Unit,
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -145,6 +154,17 @@ private fun FixtureCard(fixture: Fixture, onClick: () -> Unit) {
                     text = "${fixture.homeGoals} - ${fixture.awayGoals}",
                     style = MaterialTheme.typography.titleMedium,
                 )
+            } else {
+                prediction?.let { p ->
+                    Column {
+                        Text(
+                            text = "Modello: 1 " + "%.0f%%".format(p.homeProb * 100) +
+                                "  X " + "%.0f%%".format(p.drawProb * 100) +
+                                "  2 " + "%.0f%%".format(p.awayProb * 100),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
             }
         }
     }

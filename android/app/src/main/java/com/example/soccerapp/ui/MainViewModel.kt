@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 
 data class UiState(
     val fixtures: List<Fixture> = emptyList(),
+    val predictions: Map<String, Prediction> = emptyMap(),
     val oddsLoading: Boolean = false,
     val suggestions: List<BetSuggestion> = emptyList(),
     val error: String? = null,
@@ -51,10 +52,14 @@ class MainViewModel : ViewModel() {
                 }
                 val engine = buildEngineFrom(all.filter { it.isFinished })
                 val fixtures = all.filter { !it.isFinished }
+                val predictions = fixtures.associate {
+                    it.id to predictFor(it.homeTeam, it.awayTeam, engine)
+                }
                 val events = fetchOdds(fixtures)
                 val suggestions = buildSuggestions(fixtures, events, engine)
                 _state.value = _state.value.copy(
                     fixtures = fixtures,
+                    predictions = predictions,
                     suggestions = suggestions,
                     oddsLoading = false,
                 )
