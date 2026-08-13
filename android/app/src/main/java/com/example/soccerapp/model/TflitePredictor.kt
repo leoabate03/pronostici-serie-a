@@ -2,6 +2,7 @@ package com.example.soccerapp.model
 
 import android.content.Context
 import org.tensorflow.lite.Interpreter
+import org.tensorflow.lite.select.TensorFlowSelectDelegate
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -36,7 +37,10 @@ class TflitePredictor(context: Context) {
 
     init {
         try {
-            interpreter = Interpreter(loadModelFile(context))
+            val options = Interpreter.Options().apply {
+                addDelegate(TensorFlowSelectDelegate())
+            }
+            interpreter = Interpreter(loadModelFile(context), options)
         } catch (e: Exception) {
             // In assenza del .tflite (sviluppo) il modello cade nel fallback
             // probabilistico in ValueBetCalculator.
