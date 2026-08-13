@@ -28,6 +28,7 @@ data class UiState(
     val oddsLoading: Boolean = false,
     val suggestions: List<BetSuggestion> = emptyList(),
     val modelActive: Boolean = false,
+    val modelError: String? = null,
     val error: String? = null,
 )
 
@@ -64,6 +65,7 @@ class MainViewModel : ViewModel() {
                     suggestions = suggestions,
                     oddsLoading = false,
                     modelActive = predictor?.isModelLoaded == true,
+                    modelError = if (predictor?.isModelLoaded == true) null else predictor?.loadError,
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(error = e.message ?: "Errore: ${e.javaClass.simpleName}")

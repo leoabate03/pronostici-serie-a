@@ -27,6 +27,10 @@ class TflitePredictor(context: Context) {
      */
     val isModelLoaded: Boolean get() = interpreter != null
 
+    /** Messaggio dell'ultimo errore di caricamento (null se ok o mai tentato). */
+    var loadError: String? = null
+        private set
+
     // Deve combaciare con FEATURE_COLS nel notebook di addestramento (8, no quotes).
     val featureCount = 8
 
@@ -36,6 +40,7 @@ class TflitePredictor(context: Context) {
         } catch (e: Exception) {
             // In assenza del .tflite (sviluppo) il modello cade nel fallback
             // probabilistico in ValueBetCalculator.
+            loadError = e.javaClass.simpleName + ": " + (e.message ?: "no message")
             interpreter = null
         }
     }

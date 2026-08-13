@@ -87,6 +87,14 @@ fun FixturesScreen(
                 },
             )
         }
+        state.modelError?.let { err ->
+            Text(
+                text = "Dettaglio caricamento modello: $err",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
 
         OutlinedTextField(
             value = query,
