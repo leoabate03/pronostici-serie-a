@@ -239,8 +239,9 @@ converter = tf.lite.TFLiteConverter.from_keras_model(model)
 # Ottimizzazioni per ridurre dimensione apk
 converter.optimizations = [tf.lite.Optimize.DEFAULT]
 # Impedisce l'uso di op "nuove" (es. FULLY_CONNECTED v12) non supportate
-# dal runtime TFLite 2.14/2.16 su device: solo TFLITE_BUILTINS.
+# dal runtime TFLite 2.14 su device: solo TFLITE_BUILTINS + converter legacy.
 converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS]
+converter.experimental_new_converter = False
 tflite_model = converter.convert()
 
 out_path = "/content/seriea_model.tflite"
