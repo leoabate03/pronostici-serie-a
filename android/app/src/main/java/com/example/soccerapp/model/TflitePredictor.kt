@@ -2,8 +2,8 @@ package com.example.soccerapp.model
 
 import android.content.Context
 import org.tensorflow.lite.Interpreter
-import java.nio.MappedByteBuffer
-import java.nio.channels.FileChannel
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /**
  * Wrapper per il modello TensorFlow Lite addestrato in Colab
@@ -40,16 +40,14 @@ class TflitePredictor(context: Context) {
         }
     }
 
-    private fun loadModelFile(context: Context): MappedByteBuffer {
-        val descriptor = context.assets.openFd("seriea_model.tflite")
-        val input = descriptor.createInputStream()
-        val buffer = input.channel.map(
-            FileChannel.MapMode.READ_ONLY,
-            descriptor.startOffset,
-            descriptor.declaredLength,
-        )
-        input.close()
-        return buffer
+    private fun loadModelFile(context: Context): ByteBuffer {
+        // Lettura diretta via InputStream: funziona anche se l'asset .tflite
+        // venisse compresso da AAPT (openFd avrebbe fallito).
+        val bytes = context.assets.open("seriea_model.tflite").use { it.readBytes() }
+        return ByteBuffer.allocateDirect(bytes.size).order(ByteOrder.nativeOrder()).apply {
+            put(bytes)
+            rewind()
+        }
     }
 
     /**

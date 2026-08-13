@@ -72,6 +72,22 @@ fun FixturesScreen(
             Text("Aggiorna dati")
         }
 
+        Row(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Text(
+                text = if (state.modelActive) {
+                    "Modello: attivo"
+                } else {
+                    "Modello: fallback (baseline Serie A)"
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = if (state.modelActive) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.error
+                },
+            )
+        }
+
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },

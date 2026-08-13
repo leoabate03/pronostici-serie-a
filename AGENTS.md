@@ -16,7 +16,7 @@ android/app/src/main/java/com/example/soccerapp/
   model/          Models.kt, ValueBetCalculator.kt, TflitePredictor.kt, TeamStatsEngine.kt
   di/ApiKeys.kt   API keys live here — never commit real values
   ui/             Compose screens + MainViewModel
-android/app/src/main/assets/seriea_model.tflite   trained model (placeholder until trained)
+android/app/src/main/assets/seriea_model.tflite   trained model (8-feature, real)
 ```
 
 ## Key facts
@@ -37,9 +37,12 @@ android/app/src/main/assets/seriea_model.tflite   trained model (placeholder unt
   Odds API uses hex ids — the ViewModel joins on normalized team names
   (`norm(home)+"|"+norm(away)`). Keep that join logic in sync when adding data
   sources.
-- **The `.tflite` placeholder is a text file**, not a real model. The app
-  deliberately treats a failed `Interpreter` load as "no ML" and falls back to
-  Serie A base rates (~46/27/27). Do not add a crash/log `rethrow` there.
+- **The `.tflite` is a real trained model** (8-feature, float32 I/O, int8
+  quantized weights, ~11KB). The app deliberately treats a failed `Interpreter`
+  load as "no ML" and falls back to Serie A base rates (~46/27/27) — in that
+  case the UI shows "Modello: fallback (baseline Serie A)". Do not add a
+  crash/log `rethrow` there. Use the UI indicator (modelActive) to tell the two
+  states apart instead of guessing.
 - **The trained model is 8-feature, no odds** (currently live). `featureCount`
   in `TflitePredictor` (8) must match `FEATURE_COLS` in
   `notebooks/02_train_model.py`. Physical team-stat features come from

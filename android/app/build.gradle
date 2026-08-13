@@ -46,6 +46,11 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+    androidResources {
+        // Il .tflite non deve essere compresso: a volte openFd() fallisce
+        // sugli asset compressi. Con la lettura via ByteBuffer e' solo cautelativo.
+        noCompress += '.tflite'
+    }
 }
 
 dependencies {

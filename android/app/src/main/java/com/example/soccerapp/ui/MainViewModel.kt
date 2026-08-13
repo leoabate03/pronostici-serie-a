@@ -27,6 +27,7 @@ data class UiState(
     val predictions: Map<String, Prediction> = emptyMap(),
     val oddsLoading: Boolean = false,
     val suggestions: List<BetSuggestion> = emptyList(),
+    val modelActive: Boolean = false,
     val error: String? = null,
 )
 
@@ -62,6 +63,7 @@ class MainViewModel : ViewModel() {
                     predictions = predictions,
                     suggestions = suggestions,
                     oddsLoading = false,
+                    modelActive = predictor?.isModelLoaded == true,
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(error = e.message ?: "Errore: ${e.javaClass.simpleName}")
