@@ -44,13 +44,15 @@ class TeamStatsEngine {
 
     /**
      * Costruisce il vettore (8) atteso dal modello, in ordine FEATURE_COLS.
+     * @param gameweek giornata di campionato (1..38); se null usa 0 (inizio).
      */
-    fun featuresFor(home: String, away: String): FloatArray {
+    fun featuresFor(home: String, away: String, gameweek: Int? = null): FloatArray {
         val h = teams[home.lowercase().trim()] ?: TeamStats()
         val a = teams[away.lowercase().trim()] ?: TeamStats()
+        val gameweekNorm = (gameweek ?: 0).coerceIn(0, 38) / 38f
         return floatArrayOf(
             1.0f,                    // is_home
-            0.5f,                    // gameweek_norm (fisso: non noto in-app)
+            gameweekNorm,            // gameweek_norm (0..1)
             h.g.toFloat(), h.s.toFloat(),
             a.g.toFloat(), a.s.toFloat(),
             (h.points.sum() / h.points.size).toFloat(),

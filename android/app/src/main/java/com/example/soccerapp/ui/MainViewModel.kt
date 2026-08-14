@@ -55,7 +55,7 @@ class MainViewModel : ViewModel() {
                 val engine = buildEngineFrom(all.filter { it.isFinished })
                 val fixtures = all.filter { !it.isFinished }
                 val predictions = fixtures.associate {
-                    it.id to predictFor(it.homeTeam, it.awayTeam, engine)
+                    it.id to predictFor(it, engine)
                 }
                 val events = fetchOdds(fixtures)
                 val suggestions = buildSuggestions(fixtures, events, engine)
@@ -95,6 +95,7 @@ class MainViewModel : ViewModel() {
                 homeGoals = m.score?.fullTime?.home,
                 awayGoals = m.score?.fullTime?.away,
                 utcDate = m.utcDate,
+                matchday = m.matchday,
             )
         }
     }
@@ -129,7 +130,7 @@ class MainViewModel : ViewModel() {
             val (best, titles) = ValueBetCalculator.bestOddsPerOutcome(bookmakers)
             if (best.isEmpty()) return@forEach
 
-            val prediction = predictFor(fixture.homeTeam, fixture.awayTeam, engine)
+            val prediction = predictFor(fixture, engine)
             suggestions += ValueBetCalculator.findValueBets(
                 fixtureId = event.id,
                 bestPerOutcome = best,
@@ -172,8 +173,7 @@ class MainViewModel : ViewModel() {
      * finite e chiede al modello la probabilita' 1X2 / over.
      */
     private fun predictFor(
-        home: String,
-        away: String,
+        fixture: Fixture,
         engine: TeamStatsEngine,
     ): Prediction {
         val model = predictor
@@ -182,6 +182,6 @@ class MainViewModel : ViewModel() {
         if (model == null || !model.isModelLoaded) {
             return Prediction(0.46, 0.27, 0.27, 0.50)
         }
-        return model.predict(engine.featuresFor(home, away))
+        return model.predict(engine.featuresFor(fixture.homeTeam, fixture.awayTeam, fixture.matchday))
     }
 }

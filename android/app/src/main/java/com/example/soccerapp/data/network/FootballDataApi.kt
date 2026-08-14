@@ -17,6 +17,7 @@ data class FdMatch(
     @Json(name = "homeTeam") val homeTeam: FdTeam,
     @Json(name = "awayTeam") val awayTeam: FdTeam,
     @Json(name = "score") val score: FdScore?,
+    @Json(name = "matchday") val matchday: Int?,
 )
 
 @JsonClass(generateAdapter = false)

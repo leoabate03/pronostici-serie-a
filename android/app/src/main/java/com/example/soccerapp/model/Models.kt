@@ -8,6 +8,7 @@ data class Fixture(
     val homeGoals: Int?,
     val awayGoals: Int?,
     val utcDate: String,
+    val matchday: Int? = null,
 ) {
     val isFinished: Boolean get() = homeGoals != null && awayGoals != null
 }

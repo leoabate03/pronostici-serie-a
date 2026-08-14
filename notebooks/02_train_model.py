@@ -147,12 +147,14 @@ X = pd.concat([df.reset_index(drop=True), feat_df], axis=1)
 
 # ----- 2c. Variabili di gioco -----
 X["is_home"] = 1.0
-# Giornata di campionato (se disponibile) -> normalizzata
+# Giornata di campionato -> normalizzata. Il CSV usa "round" (1..38).
+# Coerente con l'app: gameweek_norm = matchday/38 (default 0 a inizio).
 if "gameweek" in X.columns:
     X["gameweek_norm"] = X["gameweek"].fillna(0) / 38.0
+elif "round" in X.columns:
+    X["gameweek_norm"] = X["round"].fillna(0).clip(lower=0, upper=38) / 38.0
 else:
-    X["gameweek_norm"] = 0.5
-# Distanza dai match precedenti -> la omettiamo per semplicita'
+    X["gameweek_norm"] = 0.0
 
 # ----- 2d. Quote del bookmaker (predittore piu' forte) -----
 # Se nel CSV hai le quote 1X2 (HOME_WIN_ODD, DRAW_ODD, AWAY_WIN_ODD)
